@@ -137,19 +137,14 @@ define elasticsearch::plugin(
     $real_url = undef
   }
 
-  if ($real_url == undef) {
-    $install_cmd = "${elasticsearch::plugintool}${proxy} install ${name}"
-    $exec_rets = [0,]
-  } else {
-    $install_cmd = "${elasticsearch::plugintool}${proxy} install ${name} --url ${real_url}"
-    $exec_rets = [0,1]
-  }
+  $install_cmd = "${elasticsearch::plugintool}${proxy} install ${name}"
+  $exec_rets = [0,]
 
   case $ensure {
     'installed', 'present': {
       $name_file_path = "${elasticsearch::plugindir}/${plugin_dir}/.name"
       exec {"purge_plugin_${plugin_dir}_old":
-        command => "${elasticsearch::plugintool} --remove ${plugin_dir}",
+        command => "${elasticsearch::plugintool} remove ${plugin_dir}",
         onlyif  => "test -e ${elasticsearch::plugindir}/${plugin_dir} && test \"$(cat ${name_file_path})\" != '${name}'",
         before  => Exec["install_plugin_${name}"],
       }
@@ -168,7 +163,7 @@ define elasticsearch::plugin(
     }
     'absent': {
       exec {"remove_plugin_${name}":
-        command => "${elasticsearch::plugintool} --remove ${plugin_dir}",
+        command => "${elasticsearch::plugintool} remove ${plugin_dir}",
         onlyif  => "test -d ${elasticsearch::plugindir}/${plugin_dir}",
         notify  => $notify_service,
       }
